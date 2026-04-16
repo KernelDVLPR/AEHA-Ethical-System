@@ -2,13 +2,15 @@
 // Servicio API — Comunicación con el backend Express
 // ============================================================
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 /**
  * Helper genérico para peticiones al backend
  */
 async function fetchAPI(endpoint, options = {}) {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const url = `${API_BASE}${endpoint}`;
+  
+  const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -16,7 +18,17 @@ async function fetchAPI(endpoint, options = {}) {
     ...options,
   });
 
-  const data = await response.json();
+  // Intentar obtener el texto primero por si no es JSON
+  const text = await response.text();
+  let data;
+  
+  try {
+    data = JSON.parse(text);
+  } catch (err) {
+    // Si no es JSON (el clásico "Unexpected token T"), mostramos el error con contexto
+    console.error(`❌ Error parseando JSON de ${url}. Respuesta recibida:`, text.substring(0, 100));
+    throw new Error(`Respuesta no válida del servidor (${response.status}). ¿Ruta incorrecta?`);
+  }
 
   if (!response.ok) {
     throw new Error(data.error || 'Error en la petición');
