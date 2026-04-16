@@ -8,7 +8,10 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
  * Helper genérico para peticiones al backend
  */
 async function fetchAPI(endpoint, options = {}) {
-  const url = `${API_BASE}${endpoint}`;
+  // Limpiar posibles barras dobles si API_BASE termina en / y endpoint empieza por /
+  const cleanBase = API_BASE.replace(/\/$/, '');
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${cleanBase}${cleanEndpoint}`;
   
   const response = await fetch(url, {
     headers: {
